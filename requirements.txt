@@ -1,0 +1,3 @@
+fastapi
+langgraph
+qdrant_client
