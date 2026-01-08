@@ -8,6 +8,15 @@ from langgraph.graph import StateGraph, END
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 
+# chwy
+from embeddings.fake import FakeEmbedding
+
+# chwy
+qdrant_client_url = os.getenv('QDRANT_CLIENT_URL')
+collection_name = os.getenv('COLLECTION_NAME')
+port = os.getenv('PORT')
+embedder = FakeEmbedding()
+
 app = FastAPI(title="Learning RAG Demo")
 
 # Pretend this is a real embedding model
@@ -21,10 +30,10 @@ docs_memory = []
 
 # Qdrant setup (assumes local instance)
 try:
-    qdrant = QdrantClient("http://localhost:6333")
-    if not qdrant.collection_exists("demo_collection"):
+    qdrant = QdrantClient(qdrant_client_url)
+    if not qdrant.collection_exists(collection_name):
         qdrant.create_collection(
-            collection_name="demo_collection",
+            collection_name=collection_name,
             vectors_config=VectorParams(size=128, distance=Distance.COSINE)
     )
     USING_QDRANT = True
@@ -36,10 +45,10 @@ except Exception as e:
 def simple_retrieve(state):
     query = state["question"]
     results = []
-    emb = fake_embed(query)
+    emb = embedder.embed(query)
 
     if USING_QDRANT:
-        hits = qdrant.search(collection_name="demo_collection", query_vector=emb, limit=2)
+        hits = qdrant.search(collection_name=collection_name, query_vector=emb, limit=2)
         for hit in hits:
             results.append(hit.payload["text"])
     else:
@@ -94,13 +103,13 @@ class DocumentRequest(BaseModel):
 @app.post("/add")
 def add_document(req: DocumentRequest):
     try:
-        emb = fake_embed(req.text)
+        emb = embedder.embed(req.text)
         doc_id = len(docs_memory)  # super unsafe ID!
         payload = {"text": req.text}
 
         if USING_QDRANT:
             qdrant.upsert(
-                collection_name="demo_collection",
+                collection_name=collection_name,
                 points=[PointStruct(id=doc_id, vector=emb, payload=payload)]
             )
         else:
