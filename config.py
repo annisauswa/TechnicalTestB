@@ -8,9 +8,3 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings() 
-
-if __name__ == "__main__":
-    print("Settings loaded successfully!")
-    print(f"Qdrant URL: {settings.qdrant_url}")
-    print(f"Collection Name: {settings.collection_name}")
-    print(f"Port Number: {settings.port}")

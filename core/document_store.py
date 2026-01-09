@@ -1,12 +1,11 @@
 from typing import List, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
-from embeddings.fake import EmbeddingService
 from config import settings
 
 class DocumentStore():
-    def __init__(self, client: Optional[QdrantClient], embedder, collection_name: str):
-        self.client = client
+    def __init__(self, embedder, collection_name: str):
+        self.client = QdrantClient(settings.qdrant_url, port=settings.port)
         self.embedder = embedder
         self.collection_name = collection_name
         self.docs_memory: List[str] = []
@@ -31,13 +30,13 @@ class DocumentStore():
 
     def add_document(self, text: str):
         doc_id = len(self.docs_memory)  # super unsafe ID!
+        embedding = self.embedder.embed(text)
+        payload = {"text": text}
         
         if self.client:
-            emb = self.embedder.embed(text)
-            payload = {"text": text}
             self.client.upsert(
                 collection_name=settings.collection_name,
-                points=[PointStruct(id=doc_id, vector=emb, payload=payload)]
+                points=[PointStruct(id=doc_id, vector=embedding, payload=payload)]
             )
         else:
             self.docs_memory.append(text)
@@ -45,10 +44,10 @@ class DocumentStore():
     
     def search(self, query: str) -> List[str]:
         results = []
-        emb = self.embedder.embed(query)
+        embedding = self.embedder.embed(query)
 
         if self.client:
-            hits = self.client.search(collection_name=settings.collection_name, query_vector=emb, limit=2)
+            hits = self.client.search(collection_name=settings.collection_name, query_vector=embedding, limit=2)
             for hit in hits:
                 results.append(hit.payload["text"])
         else:
