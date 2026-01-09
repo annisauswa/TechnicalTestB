@@ -17,8 +17,7 @@ class RAG():
 
     def _collection_exist(self):
         try:
-            if not self.client.collection_exists(settings.collection_name):
-                self.client.create_collection(
+            self.client.recreate_collection(
                     collection_name=settings.collection_name,
                     vectors_config=VectorParams(size=128, distance=Distance.COSINE)
             )

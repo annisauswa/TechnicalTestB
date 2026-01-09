@@ -41,7 +41,7 @@ def status(request: Request):
     docs_count = retriever.document_count
 
     return {
-        "qdrant_ready": True if retriever.client else False,
+        "qdrant_ready": retriever.client is not None,
         "in_memory_docs_count": docs_count,
         "graph_ready": request.app.state.graph is not None
     }
