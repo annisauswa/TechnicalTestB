@@ -29,7 +29,7 @@ class DocumentStore():
             print("⚠️  Qdrant not available. Falling back to in-memory list.")
 
     def add_document(self, text: str):
-        doc_id = len(self.docs_memory)  # super unsafe ID!
+        doc_id = len(self.docs_memory)
         embedding = self.embedder.embed(text)
         payload = {"text": text}
         
@@ -55,5 +55,5 @@ class DocumentStore():
                 if query.lower() in doc.lower():
                     results.append(doc)
             if not results and self.docs_memory:
-                results = [self.docs_memory[0]]  # Just grab first
+                results = [self.docs_memory[0]] 
         return results

@@ -20,7 +20,6 @@ class RagWorkflow():
         state["answer"] = answer
         return state
     
-    
     def _build_graph(self):
         workflow = StateGraph(AgentState)
         workflow.add_node("retrieve", self._retrieve)
