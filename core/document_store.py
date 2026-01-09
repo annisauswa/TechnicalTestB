@@ -1,15 +1,18 @@
-from typing import List
+from typing import List, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
-from embeddings.fake import FakeEmbedding
+from embeddings.fake import EmbeddingService
 from config import settings
 
-class RAG():
-    def __init__(self):
-        self.client = QdrantClient(settings.qdrant_url, port=settings.port)
-        self.embedder = FakeEmbedding()
+class DocumentStore():
+    def __init__(self, client: Optional[QdrantClient], embedder, collection_name: str):
+        self.client = client
+        self.embedder = embedder
+        self.collection_name = collection_name
         self.docs_memory: List[str] = []
-        self._collection_exist()
+
+        if self.client:
+            self._collection_exist()
 
     @property
     def document_count(self) -> int:
@@ -18,8 +21,8 @@ class RAG():
     def _collection_exist(self):
         try:
             self.client.recreate_collection(
-                    collection_name=settings.collection_name,
-                    vectors_config=VectorParams(size=128, distance=Distance.COSINE)
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(size=128, distance=Distance.COSINE)
             )
                 
         except Exception as e:

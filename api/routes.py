@@ -8,8 +8,8 @@ router = APIRouter()
 def ask_question(req: QuestionRequest, request: Request):
     start = time.time()
     try:
-        graph = request.app.state.graph
-        result = graph.invoke({"question": req.question})
+        workflow = request.app.state.workflow
+        result = workflow.invoke({"question": req.question})
 
         return {
             "question": req.question,
@@ -24,8 +24,8 @@ def ask_question(req: QuestionRequest, request: Request):
 @router.post("/add")
 def add_document(req: DocumentRequest, request: Request):
     try:
-        retriever = request.app.state.retriever
-        doc_id = retriever.add_document(req.text)
+        store = request.app.state.store
+        doc_id = store.add_document(req.text)
 
         return {
             "id": doc_id, 
@@ -37,11 +37,11 @@ def add_document(req: DocumentRequest, request: Request):
 
 @router.get("/status")
 def status(request: Request):
-    retriever = request.app.state.retriever
-    docs_count = retriever.document_count
+    store = request.app.state.store
+    docs_count = store.document_count
 
     return {
-        "qdrant_ready": retriever.client is not None,
+        "qdrant_ready": store.client is not None,
         "in_memory_docs_count": docs_count,
-        "graph_ready": request.app.state.graph is not None
+        "graph_ready": request.app.state.workflow is not None
     }

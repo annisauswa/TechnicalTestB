@@ -2,7 +2,7 @@ import random
 from typing import List
 from .base import BaseEmbedding
 
-class FakeEmbedding(BaseEmbedding):
+class EmbeddingService(BaseEmbedding):
     VECTOR_SIZE = 128
 
     def embed(self, text: str):

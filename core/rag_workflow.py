@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, END
 from core.agent_state import AgentState
-from core.rag import RAG
+from core.document_store import DocumentStore
 
-def build_graph(state_cls: type[AgentState], retriever: RAG):
+def RagWorkflow(state_cls: type[AgentState], retriever: DocumentStore):
     def simple_retrieve(state: AgentState) -> AgentState:
         query = state["question"]
         state["context"] = retriever.search(query)

@@ -3,21 +3,32 @@ from qdrant_client import QdrantClient
 
 from config import settings
 from api.routes import router
-from embeddings.fake import FakeEmbedding
-from core.rag import RAG
-from core.agentic_graph import build_graph
+from core.document_store import DocumentStore
+from core.rag_workflow import RagWorkflow
 from core.agent_state import AgentState
+from embeddings.fake import EmbeddingService
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Learning RAG Demo")
 
-    retriever = RAG()
+    embedder = EmbeddingService()
 
-    graph = build_graph(AgentState, retriever)
+    try:
+        client = QdrantClient(settings.qdrant_url, port=settings.port)
+    except Exception:
+        client = None
 
-    app.state.retriever = retriever
-    app.state.graph = graph
+    store = DocumentStore(
+        client=client,
+        embedder=embedder,
+        collection_name=settings.collection_name
+    )
+
+    workflow = RagWorkflow(AgentState, store)
+
+    app.state.store = store
+    app.state.workflow = workflow
 
     app.include_router(router)
 
